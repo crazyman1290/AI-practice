@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>로또 번호 생성기</title>
+<script>try{var t=localStorage.getItem("lotto645-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -23,7 +24,11 @@ body{background:var(--bg);color:var(--ink);font:16px/1.55 "Noto Sans KR",system-
 header{background:var(--red);color:#fff;padding:22px max(5vw,16px) 20px}
 header .in{max-width:1240px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:8px 24px}
 h1{font:400 clamp(32px,5vw,46px)/1.05 "Black Han Sans",sans-serif;margin:0;letter-spacing:-.01em}
-header p{margin:0;font-size:15px;opacity:.92}
+header p{margin:6px 0 0;font-size:15px;opacity:.92}
+.theme{flex:none;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border:2px solid rgba(255,255,255,.8);border-radius:22px;background:rgba(0,0,0,.12);color:#fff;font:700 15px "Noto Sans KR",sans-serif;cursor:pointer}
+.theme:hover{background:rgba(0,0,0,.25)}
+.theme svg{width:18px;height:18px;fill:currentColor}
+.theme:focus-visible{outline:3px solid #fff;outline-offset:2px}
 main{max-width:1240px;margin:0 auto;padding:clamp(20px,3vw,40px) max(5vw,16px) 48px;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:clamp(20px,3vw,40px);align-items:start}
 h2{font-size:17px;margin:0 0 12px}
 .res{background:var(--soft);border-radius:18px;padding:clamp(16px,2.4vw,28px)}
@@ -75,8 +80,11 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 </head>
 <body>
 <header><div class="in">
-  <h1>로또 6/45 번호 생성기</h1>
-  <p>1부터 45까지, 중복 없는 6개 번호 · 고정수와 제외수 지정 가능</p>
+  <div>
+    <h1>로또 6/45 번호 생성기</h1>
+    <p>1부터 45까지, 중복 없는 6개 번호 · 고정수와 제외수 지정 가능</p>
+  </div>
+  <button class="theme" id="theme" aria-label="테마 바꾸기"></button>
 </div></header>
 
 <main>
@@ -210,6 +218,25 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
     if (!st.sets.length) return toast("먼저 번호를 뽑아 주세요");
     copy(st.sets.map((s, i) => `${label(i)}: ${s.join(", ")}`).join("\n"));
   });
+
+  const sun = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1v3M12 20v3M1 12h3M20 12h3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></g></svg>';
+  const moon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 14.5A9 9 0 0 1 9.5 3a9 9 0 1 0 11.5 11.5z"/></svg>';
+  const sysDark = () => window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches;
+  let theme = null;
+  try { theme = localStorage.getItem("lotto645-theme"); } catch (e) {}
+  function applyTheme() {
+    const t = theme || (sysDark() ? "dark" : "light");
+    document.documentElement.dataset.theme = t;
+    $("theme").innerHTML = t === "dark" ? `${sun}화이트 모드` : `${moon}다크 모드`;
+    $("theme").setAttribute("aria-label", t === "dark" ? "화이트 모드로 바꾸기" : "다크 모드로 바꾸기");
+  }
+  $("theme").addEventListener("click", () => {
+    theme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    try { localStorage.setItem("lotto645-theme", theme); } catch (e) {}
+    applyTheme();
+  });
+  if (window.matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (!theme) applyTheme(); });
+  applyTheme();
 
   renderSeg(); renderGrid(); renderHist();
   st.sets = Array.from({ length: st.games }, draw);
