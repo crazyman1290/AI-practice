@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>로또 번호 생성기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE everyday, a little festive
+   IDEA the paper lotto slip: red printed grid you mark, and the draw result printed above it
+   PICTURE rows of large glossy balls in the real lotto band colours
+   COLOUR white paper, slip red #e0312b, ink near-black; night: deep red-black paper
+   TYPE Black Han Sans for title and ball numerals + Noto Sans KR
+   LAYOUT laptop: results wide on the left, slip grid + controls on the right; phone: title, results, controls, slip */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#170d0d);--ink:light-dark(#1b1414,#f4ecea);--red:light-dark(#e0312b,#ff5a4f);--soft:light-dark(#fdecea,#2a1715);--line:light-dark(#f2b8b3,#5a2a26);--mute:light-dark(#6d5a58,#bca8a5);--card:light-dark(#fff,#1f1212)}
+:root[data-theme=light]{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 "Noto Sans KR",system-ui,sans-serif;overflow-x:clip}
+header{background:var(--red);color:#fff;padding:22px max(5vw,16px) 20px}
+header .in{max-width:1240px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:8px 24px}
+h1{font:400 clamp(32px,5vw,46px)/1.05 "Black Han Sans",sans-serif;margin:0;letter-spacing:-.01em}
+header p{margin:0;font-size:15px;opacity:.92}
+main{max-width:1240px;margin:0 auto;padding:clamp(20px,3vw,40px) max(5vw,16px) 48px;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:clamp(20px,3vw,40px);align-items:start}
+h2{font-size:17px;margin:0 0 12px}
+.res{background:var(--soft);border-radius:18px;padding:clamp(16px,2.4vw,28px)}
+.row{display:flex;align-items:center;gap:clamp(6px,1.2vw,12px);padding:12px 0;border-bottom:1px dashed var(--line)}
+.row:last-child{border-bottom:0}
+.tag{flex:none;width:28px;font:400 20px "Black Han Sans",sans-serif;color:var(--red)}
+.balls{display:flex;gap:clamp(5px,1vw,10px);flex:1;flex-wrap:nowrap}
+.ball{--c:#aaa;flex:0 0 auto;width:clamp(38px,6.4vw,62px);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;font:400 clamp(17px,2.6vw,26px)/1 "Black Han Sans",sans-serif;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.35);background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.75) 0 8%,transparent 30%),radial-gradient(circle at 50% 60%,var(--c) 55%,color-mix(in srgb,var(--c),#000 28%) 100%);box-shadow:0 3px 0 color-mix(in srgb,var(--c),#000 35%)}
+.ball.fix{outline:3px solid var(--ink);outline-offset:2px}
+.pop .ball{animation:pop .45s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes pop{from{transform:scale(.2) rotate(-90deg);opacity:0}}
+@media(prefers-reduced-motion:reduce){.pop .ball{animation:none}}
+.copy{flex:none;margin-left:auto;background:none;border:1px solid var(--line);color:var(--mute);border-radius:10px;font:500 13px "Noto Sans KR",sans-serif;min-height:36px;padding:0 10px;cursor:pointer}
+.copy:hover{color:var(--ink);border-color:var(--red)}
+.empty{color:var(--mute);padding:24px 0}
+.ctl{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:18px}
+.seg{display:flex;border:2px solid var(--red);border-radius:12px;overflow:hidden}
+.seg button{background:none;border:0;color:var(--red);font:700 16px "Noto Sans KR",sans-serif;min-width:44px;min-height:44px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--red);color:#fff}
+.go{flex:1 1 180px;min-height:52px;border:0;border-radius:14px;background:var(--red);color:#fff;font:400 22px "Black Han Sans",sans-serif;cursor:pointer;box-shadow:0 4px 0 color-mix(in srgb,var(--red),#000 35%)}
+.go:active{transform:translateY(3px);box-shadow:0 1px 0 color-mix(in srgb,var(--red),#000 35%)}
+button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.note{font-size:14px;color:var(--mute);margin:10px 0 0}
+.slip{border:2px solid var(--red);border-radius:18px;padding:16px;background:var(--card)}
+.slip h2{color:var(--red);display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.slip h2 small{font-weight:400;font-size:13px;color:var(--mute)}
+.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.n{min-height:44px;border:1.5px solid var(--line);border-radius:8px;background:none;color:var(--red);font:700 15px "Noto Sans KR",sans-serif;cursor:pointer;position:relative}
+.n:hover{border-color:var(--red)}
+.n.in{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.n.out{color:var(--mute);border-style:dashed;opacity:.6}
+.n.out::after{content:"";position:absolute;left:18%;right:18%;top:50%;border-top:2px solid var(--mute);transform:rotate(-30deg)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--mute);margin-top:12px}
+.legend b{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:5px;border:1.5px solid var(--line)}
+.legend .i{background:var(--ink);border-color:var(--ink)}
+.legend .o{border-style:dashed}
+.sum{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px;font-size:14px}
+.sum span{white-space:nowrap}
+.reset{margin-left:auto;background:none;border:0;color:var(--red);font:500 14px "Noto Sans KR",sans-serif;min-height:44px;cursor:pointer;text-decoration:underline}
+.hist{margin-top:22px}
+.hist ol{list-style:none;margin:0;padding:0;font-size:14px;max-height:260px;overflow:auto}
+.hist li{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.hist time{color:var(--mute);flex:none;white-space:nowrap}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+@media(max-width:820px){main{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){.tag{width:20px;font-size:17px}.copy{display:none}.res{padding:12px}}
+</style>
+</head>
+<body>
+<header><div class="in">
+  <h1>로또 6/45 번호 생성기</h1>
+  <p>1부터 45까지, 중복 없는 6개 번호 · 고정수와 제외수 지정 가능</p>
+</div></header>
+
+<main>
+  <section>
+    <div class="res" aria-live="polite">
+      <h2>이번 추천 번호</h2>
+      <div id="out"></div>
+    </div>
+    <div class="ctl">
+      <div class="seg" role="group" aria-label="게임 수" id="seg"></div>
+      <button class="go" id="go">번호 뽑기</button>
+    </div>
+    <div class="ctl">
+      <button class="copy" id="copyAll" style="display:inline-block;margin-left:0">전체 복사</button>
+    </div>
+    <p class="note">무작위 추첨이며 당첨 확률은 어떤 조합이든 같습니다 (1등 약 8,145,060분의 1).</p>
+  </section>
+
+  <aside>
+    <div class="slip">
+      <h2>번호 선택 용지 <small>누를 때마다 고정 → 제외 → 해제</small></h2>
+      <div class="grid" id="grid"></div>
+      <div class="legend"><span><b class="i"></b>고정수 (최대 5개)</span><span><b class="o"></b>제외수</span></div>
+      <div class="sum"><span id="cnt"></span><button class="reset" id="reset">선택 초기화</button></div>
+    </div>
+    <div class="hist">
+      <h2>최근 뽑은 기록</h2>
+      <ol id="hist"></ol>
+    </div>
+  </aside>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+{
+  const $ = id => document.getElementById(id);
+  const color = n => n <= 10 ? "#f5b700" : n <= 20 ? "#3a9fe0" : n <= 30 ? "#f0524a" : n <= 40 ? "#8d8d8d" : "#62b33c";
+  const st = { games: 5, mark: {}, sets: [], hist: [] };
+  try { Object.assign(st, JSON.parse(localStorage.getItem("lotto645") || "{}")); } catch (e) {}
+  const save = () => { try { localStorage.setItem("lotto645", JSON.stringify({ games: st.games, mark: st.mark, hist: st.hist })); } catch (e) {} };
+
+  const fixed = () => Object.keys(st.mark).filter(k => st.mark[k] === "in").map(Number);
+  const banned = () => Object.keys(st.mark).filter(k => st.mark[k] === "out").map(Number);
+
+  function rand(max) {
+    if (window.crypto && crypto.getRandomValues) {
+      const a = new Uint32Array(1), lim = Math.floor(4294967296 / max) * max;
+      do crypto.getRandomValues(a); while (a[0] >= lim);
+      return a[0] % max;
+    }
+    return Math.floor(Math.random() * max);
+  }
+
+  function draw() {
+    const pick = new Set(fixed());
+    const pool = [];
+    for (let i = 1; i <= 45; i++) if (!pick.has(i) && st.mark[i] !== "out") pool.push(i);
+    while (pick.size < 6) pick.add(pool.splice(rand(pool.length), 1)[0]);
+    return [...pick].sort((a, b) => a - b);
+  }
+
+  const ballHtml = (n, i) => `<span class="ball${st.mark[n] === "in" ? " fix" : ""}" style="--c:${color(n)};animation-delay:${i * 70}ms">${n}</span>`;
+  const label = i => "ABCDE"[i];
+
+  function renderOut(animate) {
+    const out = $("out");
+    if (!st.sets.length) { out.innerHTML = '<p class="empty">아래 버튼을 눌러 번호를 뽑아 보세요.</p>'; return; }
+    out.className = animate ? "pop" : "";
+    out.innerHTML = st.sets.map((s, i) => `<div class="row"><span class="tag">${label(i)}</span><div class="balls">${s.map(ballHtml).join("")}</div><button class="copy" data-i="${i}">복사</button></div>`).join("");
+  }
+
+  function renderSeg() {
+    $("seg").innerHTML = [1, 2, 3, 4, 5].map(n => `<button data-g="${n}" aria-pressed="${n === st.games}">${n}</button>`).join("");
+  }
+
+  function renderGrid() {
+    let h = "";
+    for (let i = 1; i <= 45; i++) {
+      const m = st.mark[i];
+      h += `<button class="n ${m || ""}" data-n="${i}" aria-label="${i}번 ${m === "in" ? "고정" : m === "out" ? "제외" : ""}">${i}</button>`;
+    }
+    $("grid").innerHTML = h;
+    $("cnt").textContent = `고정 ${fixed().length}개 · 제외 ${banned().length}개 · 남은 번호 ${45 - banned().length}개`;
+  }
+
+  function renderHist() {
+    $("hist").innerHTML = st.hist.length
+      ? st.hist.map(h => `<li><time>${h.t}</time><span>${h.n.join(", ")}</span></li>`).join("")
+      : '<li><span style="color:var(--mute)">아직 기록이 없습니다.</span></li>';
+  }
+
+  function toast(msg) {
+    const t = $("toast");
+    t.textContent = msg; t.classList.add("on");
+    clearTimeout(toast.k); toast.k = setTimeout(() => t.classList.remove("on"), 1600);
+  }
+
+  async function copy(text) {
+    try { await navigator.clipboard.writeText(text); toast("복사했습니다"); }
+    catch (e) { toast("복사가 막혀 있어요. 직접 선택해 복사해 주세요."); }
+  }
+
+  function generate() {
+    st.sets = Array.from({ length: st.games }, draw);
+    const d = new Date(), t = `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+    st.hist = st.sets.map(n => ({ t, n })).concat(st.hist).slice(0, 30);
+    renderOut(true); renderHist(); save();
+  }
+
+  $("go").addEventListener("click", generate);
+  $("seg").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    st.games = +b.dataset.g; renderSeg(); save();
+  });
+  $("grid").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    const n = +b.dataset.n, m = st.mark[n];
+    if (!m) {
+      if (fixed().length >= 5) { st.mark[n] = "out"; toast("고정수는 최대 5개라서 제외수로 지정했어요"); }
+      else st.mark[n] = "in";
+    } else if (m === "in") st.mark[n] = "out";
+    else delete st.mark[n];
+    if (45 - banned().length < 6) { delete st.mark[n]; toast("최소 6개 번호는 남겨야 해요"); }
+    renderGrid(); save();
+  });
+  $("reset").addEventListener("click", () => { st.mark = {}; renderGrid(); save(); });
+  $("out").addEventListener("click", e => {
+    const b = e.target.closest(".copy"); if (b) copy(st.sets[+b.dataset.i].join(", "));
+  });
+  $("copyAll").addEventListener("click", () => {
+    if (!st.sets.length) return toast("먼저 번호를 뽑아 주세요");
+    copy(st.sets.map((s, i) => `${label(i)}: ${s.join(", ")}`).join("\n"));
+  });
+
+  renderSeg(); renderGrid(); renderHist();
+  st.sets = Array.from({ length: st.games }, draw);
+  renderOut(true);
+}
+</script>
+</body>
+</html>
