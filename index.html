@@ -316,9 +316,8 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
   });
   form.addEventListener("input", e => { if (e.target.classList.contains("bad") && e.target.value.trim()) e.target.classList.remove("bad"); });
 
-  renderSeg(); renderGrid(); renderHist();
-  st.sets = Array.from({ length: st.games }, draw);
-  renderOut(true);
+  renderSeg(); renderGrid();
+  generate();
 }
 </script>
 </body>
