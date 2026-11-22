@@ -15,13 +15,13 @@
    COLOUR white paper, slip red #e0312b, ink near-black; night: deep red-black paper
    TYPE Black Han Sans for title and ball numerals + Noto Sans KR
    LAYOUT laptop: results wide on the left, slip grid + controls on the right; phone: title, results, controls, slip */
-:root{color-scheme:light dark;--bg:light-dark(#ffffff,#170d0d);--ink:light-dark(#1b1414,#f4ecea);--red:light-dark(#e0312b,#ff5a4f);--soft:light-dark(#fdecea,#2a1715);--line:light-dark(#f2b8b3,#5a2a26);--mute:light-dark(#6d5a58,#bca8a5);--card:light-dark(#fff,#1f1212)}
-:root[data-theme=light]{color-scheme:light}
-:root[data-theme=dark]{color-scheme:dark}
+:root{color-scheme:light;--bg:#ffffff;--ink:#1b1414;--red:#e0312b;--soft:#fdecea;--line:#f2b8b3;--mute:#6d5a58;--card:#fff;--ok:#1d7a3a;--head:#e0312b}
+:root[data-theme=dark]{color-scheme:dark;--bg:#170d0d;--ink:#f4ecea;--red:#ff5a4f;--soft:#2a1715;--line:#5a2a26;--mute:#bca8a5;--card:#1f1212;--ok:#6fd28f;--head:#a8231c}
+@media(prefers-color-scheme:dark){:root:not([data-theme]){color-scheme:dark;--bg:#170d0d;--ink:#f4ecea;--red:#ff5a4f;--soft:#2a1715;--line:#5a2a26;--mute:#bca8a5;--card:#1f1212;--ok:#6fd28f;--head:#a8231c}}
 *{box-sizing:border-box;min-width:0}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font:16px/1.55 "Noto Sans KR",system-ui,sans-serif;overflow-x:clip}
-header{background:var(--red);color:#fff;padding:22px max(5vw,16px) 20px}
+header{background:var(--head);color:#fff;padding:22px max(5vw,16px) 20px}
 header .in{max-width:1240px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:8px 24px}
 h1{font:400 clamp(32px,5vw,46px)/1.05 "Black Han Sans",sans-serif;margin:0;letter-spacing:-.01em}
 header p{margin:6px 0 0;font-size:15px;opacity:.92}
@@ -91,7 +91,7 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 .send{flex:0 1 220px}
 .send:disabled{opacity:.6;cursor:wait}
 .fmsg{margin:0;font-size:15px}
-.fmsg.ok{color:light-dark(#1d7a3a,#6fd28f);font-weight:700}
+.fmsg.ok{color:var(--ok);font-weight:700}
 .fmsg.err{color:var(--red);font-weight:700}
 @media(max-width:820px){main{grid-template-columns:minmax(0,1fr)}.cin{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:600px){.two{grid-template-columns:minmax(0,1fr)}.send{flex:1 1 100%}}
@@ -145,8 +145,8 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
     </div>
     <form id="cform" action="https://formspree.io/f/mgakngoy" method="POST" novalidate>
       <div class="two">
-        <label>이름 <span class="req">*</span><input id="f-name" name="name" required autocomplete="name"></label>
-        <label>이메일 <span class="req">*</span><input id="f-email" name="email" type="email" required autocomplete="email"></label>
+        <label><span>이름 <span class="req">*</span></span><input id="f-name" name="name" required autocomplete="name"></label>
+        <label><span>이메일 <span class="req">*</span></span><input id="f-email" name="email" type="email" required autocomplete="email"></label>
       </div>
       <div class="two">
         <label>회사 / 소속<input id="f-company" name="company" autocomplete="organization"></label>
@@ -156,7 +156,7 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
           </select>
         </label>
       </div>
-      <label>문의 내용 <span class="req">*</span><textarea id="f-msg" name="message" rows="5" required></textarea></label>
+      <label><span>문의 내용 <span class="req">*</span></span><textarea id="f-msg" name="message" rows="5" required></textarea></label>
       <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" class="hp" aria-hidden="true">
       <input type="hidden" name="_subject" value="[로또 생성기] 제휴 문의">
       <div class="fbar">
@@ -285,7 +285,10 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
     try { localStorage.setItem("lotto645-theme", theme); } catch (e) {}
     applyTheme();
   });
-  if (window.matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (!theme) applyTheme(); });
+  try {
+    const mq = matchMedia("(prefers-color-scheme: dark)"), onSys = () => { if (!theme) applyTheme(); };
+    if (mq.addEventListener) mq.addEventListener("change", onSys); else mq.addListener(onSys);
+  } catch (e) {}
   applyTheme();
 
   const form = $("cform"), out = $("f-msg-out"), send = $("f-send");
